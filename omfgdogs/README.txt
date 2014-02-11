@@ -1,1 +1,1 @@
-Added two files, index.html, omfgdogs.css to the repo comp20-bzhang.
+Added four files, index.html, omfgdogs.css, omfgdogs.gif and omfdogs.mp3, to the repo comp20-bzhang.
