@@ -1,0 +1,7 @@
+I discussed the project with Dong. Not too sure how many hours I've put in- 20+?
+
+1. The post "/submit.json" and get "/"" API are correctly implemented. The get "/score.json" only returns an empty array.
+2. I discussed the project with Dong.
+3. +20?
+5. GameManager.prototype.actuate() stores the scores and grid in this.score and this.grid.
+6. A $.post() is used to send the variable data, which includes the objects score = this.score, grid = JSON.stringify(this.grid), time = new Date(), created_at = time.toUTCString(), and data = "username=bryan&score="+ score + "&grid=" + grid + "&created_at=" + created_at. 
