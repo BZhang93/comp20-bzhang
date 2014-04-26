@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assignment 5: Scorecenter Security Report</title>
+    <link rel="stylesheet" type="text/css" href="style.css"></link>
+
+</head>
+<body>
+<h1>Security Assessment of Scorecenter</h1>
+
+<p>Bryan Zhang</a> &bull; 4/30/2013</p>
+
+<h2>Introduction</h2>
+
+<p>This report documents the security flaws of the <a href="http://peaceful-reef-2744.herokuapp.com/">ScoreCenter</a> web application developed by Jacob Apkon for <a href="http://tuftsdev.github.io/WebProgramming/assignments/a5.html">Comp20 assignment 5</a>. The Scorecenter web application stores high scores from the game, 2048, based off the open source API for the original HTML5 game. In addition, users can see all the stored scores and search for specific usernames and the corresponding scores.</p>
+
+<h2>Methodology</h2>
+
+<p>Two approaches were used to analyze the application's security, "black-box" testing, where only the front end is available without the source code, and testing with the program code in hand. what would be available to an attacker. 
+Most initial testing was used with the curl command, but while Burp Suite's potential was explored, it was unable to be effectively utilized.
+
+<h2>Abstract of Findings</h2>
+
+<p>The biggest source of the vulnerabilites stems from the lack of input escaping. Without filtering for proper input, attackers can inject scripts and tamper with the application. As a result, sources that extract data from the database may be exposed to harmful content. However, with proper intput and output validation, many issues can be avoided.</p>
+
+<h2>Issues Found</h2>
+
+<ol>
+    <li><p><strong>Cross-Cross-Site Scripting</strong></p>
+
+    <ul>
+        <li>Affects: GET</li>
+        <li>High: There is no input validation, causing potential risks for anyone that extracts data from the web application. </li>
+        <li>Location: In the POST API</li>
+        <li>Because there is no input validation, the inputs from POST could include HTML or Javascript as an username, score, or grid. Running <code>curl --data "username=&lt;iframe src='http://omfgdogs.com'&gt;&lt;/iframe&gt;&amp;score=1000000&grid=1000000000" http://peaceful-reef-2744.herokuapp.com/submit.json</code> inputs the following:
+        <img src="xssflaw.png" alt= "XSS Flaw" width="600" height="220"/>
+        </li>
+        <li>Checking the input for specific characters using code like <code>str.match(/[\d\w\s\]|[\~\!\@\#\$\^\*\-\_\+\;]*/g).join('');</code> would help prevent this issue</li>
+    </ul>
+
+<li><p><strong>Additional Database Fields</strong><p></li>
+    <ul>
+        <li>Affects POST</li>
+        <li>Low</span>: Additional database fields cause extraneous usage of the space.</li>
+        <li>Since the application's code does not specify how many fields can be added for an input, the database may become filled with useless (or harmful), memory-consuming data. These fields will not appear to the user, but the back-end developer would be affected by this extra data. Code such as <code>curl --data "username=a&score=b&grid=c&extrafield=d" http://peaceful-reef-2774.herokuapp.com/submit.json</code> would create the fourth additional field in the database; since Jacob smartly only displays the username, score, grid, timestamp, and ID (<code>collection.find({"username":username}).sort({score : -1}).toArray(function(err, array){response.send(array);</code>), the GET request does not display any extraneous fields. However, this shows that the extra field was still sent to the database:  <img src="database.png" alt="Inserting extra fields" /><li>
+
+        <li><p>This can be resolved by building an object from only the desired fields:</p>
+
+        <code>var score = {
+            username : sanitize(req.body.username),
+            score : parseInt(req.body.score),
+            grid: sanitize(req.body.grid)
+            created_at : new Date()
+        };
+        collection.insert(score, function(err, result) { ... } );
+        </code></li>
+    </ul>
+
+<li><p><strong>Lack of Mongo DB Admin Authentication</strong></p></li>
+    <ul>
+        <li>Affects: Mongo Database</li>
+        <li>High: There is no administrator verification; anyone can see all and do all with the database. </li>
+        <li>Location: Mongo Database</li>
+        <li><p>Learning from your Javascript Pitfalls presentation, the lack of authentication to verify administrator access that can allow anyone to connect to the database from mongo was exposed. Using the <code>startup_log</code> in the <code>local</code> db, the intruders can gain potentially valuable information. If they desired to tamper with the data, they could inject data using <code>$where</code> and <code>db.eval()</code>.</p></li>
+        <li>To add login verification, one needs to modify <code>/etc/mongodb.conf</code> and add in the necessary credentials. 
+</ol>
+<h2>Conclusion</h2>
+
+<p>Between the lack of input validation, and user identification, Mr. Apkon's Scorecenter can be easily tampered with; injected scripts can gather potentially valuable information and/or crash the database, while scores can be easily modified and fabricated. Simple solutions, usually a few lines of code, will aid in the defense from attacks and improve the application's security.</n>
+In the future, Mr. Apkon should first and foremost implement input and output escaping and administrator authentication. </p>
+
+</body>
+</html>
